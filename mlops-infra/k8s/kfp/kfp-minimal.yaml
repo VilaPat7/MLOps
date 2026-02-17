@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-pipeline-api-server
+  namespace: kubeflow-pipelines
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-pipeline-api-server
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline-api-server
+    spec:
+      containers:
+      - name: api-server
+        image: aiven86/ml-pipeline-api-server:latest
+        ports:
+        - containerPort: 8888
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-pipeline-api-server
+  namespace: kubeflow-pipelines
+spec:
+  ports:
+  - port: 8888
+    targetPort: 8888
+  selector:
+    app: ml-pipeline-api-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-pipeline-ui
+  namespace: kubeflow-pipelines
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-pipeline-ui
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline-ui
+    spec:
+      containers:
+      - name: ui
+        image: aiven86/ml-pipeline-frontend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: ML_PIPELINE_SERVICE_HOST
+          value: ml-pipeline-api-server
+        - name: ML_PIPELINE_SERVICE_PORT
+          value: "8888"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-pipeline-ui
+  namespace: kubeflow-pipelines
+spec:
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: ml-pipeline-ui
