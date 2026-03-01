@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cifar10-tf-serving
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cifar10-tf-serving
+  template:
+    metadata:
+      labels:
+        app: cifar10-tf-serving
+    spec:
+      volumes:
+      - name: model
+        persistentVolumeClaim:
+          claimName: model-pvc
+      containers:
+      - name: tf-serving
+        image: tensorflow/serving:2.6.2
+        ports:
+        - containerPort: 8500  # gRPC
+        - containerPort: 8501  # REST
+        args:
+        - "--model_base_path=/models"
+        - "--model_name=cifar10"
+        - "--rest_api_port=8501"
+        volumeMounts:
+        - name: model
+          mountPath: /models
+        # Если нужны права на запись логов и т.п.:
+        securityContext:
+          runAsUser: 1000  # пользователь tensorflow
+          runAsGroup: 1000
+        # Проверка готовности
+        readinessProbe:
+          httpGet:
+            path: /v1/models/cifar10
+            port: 8501
+          initialDelaySeconds: 10
+          periodSeconds: 5

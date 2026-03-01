@@ -64,25 +64,39 @@ else
 fi
 echo ""
 
-# 5. KServe check
-echo "5. KServe:"
-if kubectl get pods -n kserve-system 2>/dev/null | grep -q "Running"; then
-    echo "   ✅ KServe controller is running"
+# 5. TensorFlow Serving check
+echo "5. TensorFlow Serving:"
+if kubectl get deployment cifar10-tf-serving -n default &>/dev/null; then
+    READY=$(kubectl get deployment cifar10-tf-serving -n default -o jsonpath='{.status.readyReplicas}')
+    if [ "$READY" -ge 1 ]; then
+        echo "   ✅ TensorFlow Serving is running (replicas: $READY)"
+    else
+        echo "   ❌ TensorFlow Serving is not ready"
+    fi
 else
-    echo "   ❌ KServe controller is not running"
-    echo "   Install KServe: ./scripts/install-istio-kserve.sh"
-fi
-
-if kubectl get pods -n kserve 2>/dev/null | grep -q "Running"; then
-    echo "   ✅ KServe models are running"
-else
-    echo "   ⚠️  No running models in KServe"
-    echo "   To deploy test model: kubectl apply -f k8s/istio-kserve/example-inferenceservice.yaml"
+    echo "   ⚠️  TensorFlow Serving not deployed. Run: kubectl apply -f tf-serving-deployment.yaml"
 fi
 echo ""
 
+# 5. KServe check может понадобится 
+#echo "7. KServe:"
+#if kubectl get pods -n kserve-system 2>/dev/null | grep -q "Running"; then
+#    echo "   ✅ KServe controller is running"
+#else
+#    echo "   ❌ KServe controller is not running"
+#    echo "   Install KServe: ./scripts/install-istio-kserve.sh"
+#fi
+#
+#if kubectl get pods -n kserve 2>/dev/null | grep -q "Running"; then
+#    echo "   ✅ KServe models are running"
+#else
+#    echo "   ⚠️  No running models in KServe"
+#    echo "   To deploy test model: kubectl apply -f k8s/istio-kserve/example-inferenceservice.yaml"
+#fi
+#echo ""
+
 # 6. Monitoring check
-echo "6. Monitoring:"
+echo "8. Monitoring:"
 MONITORING_PODS=$(kubectl get pods -n monitoring 2>/dev/null | grep -c "Running")
 if [ "$MONITORING_PODS" -ge 2 ]; then
     echo "   ✅ Monitoring is running ($MONITORING_PODS pods)"
@@ -97,7 +111,7 @@ else
 fi
 echo ""
 
-# 7. Final status
+# 8. Final status
 echo "=== Final Status ==="
 echo "All namespaces:"
 kubectl get namespaces | grep -E "kubeflow|mlflow|istio|kserve|monitoring"

@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cifar10-train-job
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: trainer
+        image: cifar10-train:latest
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: EPOCHS
+            value: "5"
+          - name: BATCH_SIZE
+            value: "64"
+          - name: MLFLOW_TRACKING_URI
+            value: "http://10.106.20.233:5000"
+          - name: AWS_ACCESS_KEY_ID
+            value: minioadmin
+          - name: AWS_SECRET_ACCESS_KEY
+            value: minioadmin
+          - name: MLFLOW_S3_ENDPOINT_URL
+            value: http://minio.mlflow-system.svc.cluster.local:9000
+      restartPolicy: Never
+  backoffLimit: 2

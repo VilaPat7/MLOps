@@ -22,7 +22,7 @@ kubectl label namespace kserve istio-injection=enabled
 echo "=== Installing KServe ==="
 
 # Install KServe
-kubectl apply -f https://github.com/kserve/kserve/releases/download/v0.11.0/kserve.yaml
+kubectl apply -f https://github.com/kserve/kserve/releases/download/v0.13.0/kserve.yaml
 
 # Wait for the KServe Controller to be ready
 echo "Waiting for KServe Controller to be ready..."

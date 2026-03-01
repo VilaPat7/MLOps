@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: model-loader
+  namespace: default
+spec:
+  template:
+    spec:
+      volumes:
+      - name: model
+        persistentVolumeClaim:
+          claimName: model-pvc
+      containers:
+      - name: loader
+        image: amazon/aws-cli
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          value: minioadmin
+        - name: AWS_SECRET_ACCESS_KEY
+          value: minioadmin
+        - name: AWS_ENDPOINT_URL
+          value: http://minio.mlflow-system.svc.cluster.local:9000
+        - name: AWS_REGION
+          value: us-east-1
+        command:
+        - sh
+        - -c
+        - |
+          set -x
+          aws s3 sync REPLACE_MODEL_URI /mnt/1/
+          # Если модель оказалась в подпапке data/model, перемещаем
+          if [ -d /mnt/1/data/model ]; then
+            echo "Moving model files from data/model to /mnt/1/"
+            mv /mnt/1/data/model/* /mnt/1/
+            rm -rf /mnt/1/data
+          fi
+          echo "Contents of /mnt/1:"
+          ls -la /mnt/1/
+        volumeMounts:
+        - name: model
+          mountPath: /mnt
+      restartPolicy: Never

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cifar10-tf-serving
+  namespace: default
+spec:
+  selector:
+    app: cifar10-tf-serving
+  ports:
+  - name: grpc
+    port: 8500
+    targetPort: 8500
+  - name: rest
+    port: 8501
+    targetPort: 8501
+  type: ClusterIP

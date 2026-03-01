@@ -22,10 +22,15 @@ echo "3. KFP MinIO Console: http://localhost:9002"
 kubectl port-forward svc/minio 9002:9001 -n kubeflow-pipelines > /dev/null 2>&1 &
 sleep 2
 
-# 4. Istio Ingress (KServe)
-echo "4. Istio Ingress Gateway (KServe): http://localhost:8080"
-kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system > /dev/null 2>&1 &
+# 4. TensorFlow Serving
+echo "4. TensorFlow Serving REST API: http://localhost:8501"
+kubectl port-forward svc/cifar10-tf-serving 8501:8501 -n default > /dev/null 2>&1 &
 sleep 2
+
+# 4. Istio Ingress (KServe)
+# echo "4. Istio Ingress Gateway (KServe): http://localhost:8080"
+# kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system > /dev/null 2>&1 &
+# sleep 2
 
 # 5. KFP UI (if full KFP is installed)
 echo "5. KFP UI (if available): http://localhost:8081"
@@ -50,8 +55,8 @@ echo "To test functionality:"
 echo "1. Open MLflow: http://localhost:5000"
 echo "2. Check MinIO: http://localhost:9001 (login: minioadmin, password: minioadmin)"
 echo "3. Check Grafana: http://localhost:3000 (login: admin, password: admin)"
-echo "4. Test KServe:"
-echo '   curl -H "Host: sklearn-iris.kserve.example.com" http://localhost:8080/v1/models/sklearn-iris:predict -d '\''{"instances": [[5.1, 3.5, 1.4, 0.2]]}'\'
+echo "4. Test TensorFlow Serving:"
+echo '   curl -d '\''{"instances": [[1.0, 2.0, 3.0, 4.0]]}'\'' -H "Content-Type: application/json" -X POST http://localhost:8501/v1/models/cifar10:predict'
 echo ""
 echo "To stop all port-forward processes:"
 echo "pkill -f 'kubectl port-forward'"
