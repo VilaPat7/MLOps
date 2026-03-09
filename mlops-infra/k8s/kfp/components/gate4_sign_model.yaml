@@ -1,0 +1,16 @@
+name: Sign Model
+description: Подписание URI модели приватным ключом
+inputs:
+  - {name: model_uri, type: String}
+  - {name: private_key, type: String}
+outputs:
+  - {name: signature_file, type: String}
+implementation:
+  container:
+    image: cifar10-gate4:latest
+    command: [
+      python, /app/sign_model.py,
+      --private-key, {inputValue: private_key},
+      --model-uri, {inputValue: model_uri},
+      --output-signature, {outputPath: signature_file}
+    ]

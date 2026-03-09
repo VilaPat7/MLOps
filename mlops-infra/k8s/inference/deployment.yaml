@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cifar10-inference
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cifar10-inference
+  template:
+    metadata:
+      labels:
+        app: cifar10-inference
+    spec:
+      volumes:
+        - name: shared-model
+          emptyDir: {}
+        - name: public-key
+          secret:
+            secretName: mlflow-secret
+            items:
+            - key: PUBLIC_KEY
+              path: public_key.pem
+      containers:
+        - name: preprocessor
+          image: inference-preprocessor:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow-server.mlflow-system.svc.cluster.local:5000"
+            - name: MLFLOW_MODEL_NAME
+              value: "cifar10_model"
+            - name: MLFLOW_MODEL_STAGE
+              value: "Production"
+            - name: PUBLIC_KEY_PATH
+              value: "/app/keys/public_key.pem"
+            - name: ANOMALY_DETECTOR_PATH
+              value: "/app/anomaly_detector.pkl"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mlflow-secret
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mlflow-secret
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: MLFLOW_S3_ENDPOINT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mlflow-secret
+                  key: MLFLOW_S3_ENDPOINT_URL
+          volumeMounts:
+            - name: shared-model
+              mountPath: /shared/models
+            - name: public-key
+              mountPath: /app/keys
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+        - name: tf-serving
+          image: tensorflow/serving:2.13.0
+          ports:
+            - containerPort: 8500
+              name: grpc
+            - containerPort: 8501
+              name: http
+          env:
+            - name: MODEL_NAME
+              value: "cifar10_model"
+            - name: MODEL_BASE_PATH
+              value: "/models"
+          volumeMounts:
+            - name: shared-model
+              mountPath: /models
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1
+              memory: 2Gi
+          readinessProbe:
+            tcpSocket:
+              port: 8500
+            initialDelaySeconds: 5
+            periodSeconds: 5

@@ -1,0 +1,22 @@
+name: Model Validation
+description: Проверка качества модели
+inputs:
+  - {name: model_uri, type: String}
+  - {name: test_data, type: String}
+  - {name: accuracy_threshold, type: Float, default: '0.7'}
+outputs:
+  - {name: report, type: String}
+  - {name: passed, type: Boolean}
+implementation:
+  container:
+    image: cifar10-gate3:latest
+    env:
+      MLFLOW_TRACKING_URI: http://mlflow-server.mlflow-system.svc.cluster.local:5000
+    command: [
+      python, /app/validate_model.py,
+      --model-uri, {inputValue: model_uri},
+      --test-data, {inputValue: test_data},
+      --accuracy-threshold, {inputValue: accuracy_threshold},
+      --output-report, {outputPath: report},
+      --output-passed, {outputPath: passed}
+    ]

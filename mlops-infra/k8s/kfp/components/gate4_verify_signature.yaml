@@ -1,0 +1,20 @@
+name: Signature Verification
+description: Проверка подписи URI модели
+inputs:
+  - {name: model_uri, type: String}
+  - {name: signature_file, type: String}
+  - {name: public_key, type: String}
+outputs:
+  - {name: report, type: String}
+  - {name: passed, type: Boolean}
+implementation:
+  container:
+    image: cifar10-gate4:latest
+    command: [
+      python, /app/verify_signature.py,
+      --public-key, {inputValue: public_key},
+      --signature-file, {inputValue: signature_file},
+      --model-uri, {inputValue: model_uri},
+      --output-report, {outputPath: report},
+      --output-passed, {outputPath: passed}
+    ]

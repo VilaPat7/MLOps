@@ -1,0 +1,20 @@
+name: Data Validation
+description: Проверка целостности данных
+inputs:
+  - {name: data_path, type: String}
+  - {name: threshold_sigma, type: Float, default: '3.0'}
+  - {name: label_col, type: String, default: 'label'}
+outputs:
+  - {name: report, type: String}
+  - {name: passed, type: Boolean}
+implementation:
+  container:
+    image: cifar10-gate1:latest
+    command: [
+      python, /app/validate_data.py,
+      --data-path, {inputValue: data_path},
+      --threshold-sigma, {inputValue: threshold_sigma},
+      --label-col, {inputValue: label_col},
+      --output-report, {outputPath: report},
+      --output-passed, {outputPath: passed}
+    ]

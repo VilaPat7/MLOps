@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cifar10-inference
+  namespace: default
+spec:
+  selector:
+    app: cifar10-inference
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  type: ClusterIP

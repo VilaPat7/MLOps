@@ -1,0 +1,18 @@
+name: Register Model in MLflow
+description: Регистрация модели в MLflow Model Registry
+inputs:
+  - {name: model_uri, type: String}
+  - {name: stage, type: String, default: 'Staging'}
+outputs:
+  - {name: report, type: String}
+implementation:
+  container:
+    image: cifar10-register-model:latest
+    env:
+      MLFLOW_TRACKING_URI: http://mlflow-server.mlflow-system.svc.cluster.local:5000
+    command: [
+      python, /register.py,
+      --model-uri, {inputValue: model_uri},
+      --stage, {inputValue: stage},
+      --output-report, {outputPath: report}
+    ]

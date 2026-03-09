@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import pandas as pd
 import numpy as np
@@ -29,20 +28,25 @@ def main():
     parser.add_argument('--threshold-sigma', type=float, default=3.0)
     parser.add_argument('--label-col', type=str, default='label')
     parser.add_argument('--output-report', type=str, default='report.json')
+    parser.add_argument('--output-passed', type=str, default='passed.txt')
     args = parser.parse_args()
 
     df = load_data(args.data_path)
     anomalies = check_label_distribution(df, args.label_col, args.threshold_sigma)
 
+    passed = len(anomalies) == 0
     result = {
-        "passed": len(anomalies) == 0,
+        "passed": passed,
         "anomalies": anomalies,
         "threshold_sigma": args.threshold_sigma
     }
     with open(args.output_report, 'w') as f:
         json.dump(result, f, indent=2)
 
-    exit(0 if result["passed"] else 1)
+    with open(args.output_passed, 'w') as f:
+        f.write(str(passed))
+
+    exit(0 if passed else 1)
 
 if __name__ == "__main__":
     main()

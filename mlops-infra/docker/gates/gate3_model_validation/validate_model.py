@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import tensorflow as tf
 import json
@@ -22,6 +21,7 @@ def main():
     parser.add_argument('--test-data', type=str, required=True)
     parser.add_argument('--accuracy-threshold', type=float, default=0.7)
     parser.add_argument('--output-report', type=str, default='model_validation.json')
+    parser.add_argument('--output-passed', type=str, default='passed.txt')
     args = parser.parse_args()
 
     model = load_model(args.model_uri)
@@ -36,6 +36,9 @@ def main():
     }
     with open(args.output_report, 'w') as f:
         json.dump(report, f, indent=2)
+
+    with open(args.output_passed, 'w') as f:
+        f.write(str(passed))
 
     exit(0 if passed else 1)
 

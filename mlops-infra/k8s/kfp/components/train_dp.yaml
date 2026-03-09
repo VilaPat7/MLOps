@@ -13,10 +13,9 @@ outputs:
   - {name: mlflow_run_id, type: String}
 implementation:
   container:
-    image: your-registry.example.com/mlops/train:latest
+    image: cifar10-train:latest
     env:
-      - name: MLFLOW_TRACKING_URI
-        value: http://mlflow-server.mlflow-system.svc.cluster.local:5000
+      MLFLOW_TRACKING_URI: http://mlflow-server.mlflow-system.svc.cluster.local:5000
     command: [
       python, /train.py,
       --data-path, {inputValue: data_path},

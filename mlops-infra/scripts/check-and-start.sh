@@ -10,7 +10,7 @@ if minikube status | grep -q "Running"; then
 else
     echo "   ❌ Minikube is not running"
     echo "   Starting Minikube..."
-    minikube start --memory=8192 --cpus=4 --addons=ingress
+    minikube start --memory=8192 --cpus=4 --addons=ingress --cni=bridge
 fi
 echo ""
 
