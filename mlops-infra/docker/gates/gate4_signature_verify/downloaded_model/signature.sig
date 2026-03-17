@@ -1,0 +1,4 @@
+{
+  "signature": "Nqh5apVl/Zn/gmNEXDQsDwP6b2N0ckOb8yiif2s8FqJyfKElAbd7xlJ2NQroTDuUrdUFdd9hnGjZ+AwA6KhqBVmHWnKIdLd70rlh112JSlLeUYXfD/Wr9EoY0nvYC9sCLMHOWRvS60L4gotwNXYOrm3U+cjgKZiAGWfoGi8US3h03SZjNCMs7vr9/L+7A0xU4QQMQFycO402vMfHc1b2HWJm7GEtTKCDaPs+wgOdzDTYzddZf0dpLPn7YNlDkmrxguSeNQsIeWIH4aB/iEfVmSfM+NV7vYfhNb6VFgMBL4q2tgZ4KjQHXzcwj4YqnW9w4JadjYHYn3I6jaMkN1JEJA==",
+  "model_uri": "runs:/0544b6cf676b466eb4e12bff72ed22a6/model"
+}

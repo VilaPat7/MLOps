@@ -1,10 +1,11 @@
+{{ if .Values.protected.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cifar10-inference
-  namespace: default
+  namespace: {{ .Values.namespace }}
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: cifar10-inference
@@ -24,18 +25,17 @@ spec:
               path: public_key.pem
       containers:
         - name: preprocessor
-          image: inference-preprocessor:v2
+          image: {{ .Values.protected.images.preprocessor }}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
-              name: http
           env:
             - name: MLFLOW_TRACKING_URI
               value: "http://mlflow-server.mlflow-system.svc.cluster.local:5000"
             - name: MLFLOW_MODEL_NAME
-              value: "cifar10_model"
+              value: {{ .Values.protected.model.name | quote }}
             - name: MLFLOW_MODEL_STAGE
-              value: "Production"
+              value: {{ .Values.protected.model.stage | quote }}
             - name: PUBLIC_KEY_PATH
               value: "/app/keys/public_key.pem"
             - name: ANOMALY_DETECTOR_PATH
@@ -58,19 +58,13 @@ spec:
             - name: MLFLOW_S3_BUCKET
               value: "mlflow"
             - name: MLFLOW_MODEL_PREFIX
-              value: "artifacts/1/0544b6cf676b466eb4e12bff72ed22a6/artifacts/model" 
+              value: {{ .Values.protected.model.prefix | quote }}
           volumeMounts:
             - name: shared-model
               mountPath: /shared/models
             - name: public-key
               mountPath: /app/keys
-          resources:
-            requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 1
-              memory: 2Gi
+          resources: {{ toYaml .Values.protected.resources.preprocessor | nindent 12 }}
           readinessProbe:
             httpGet:
               path: /health
@@ -83,30 +77,24 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
-
         - name: tf-serving
-          image: tensorflow/serving:2.13.0
+          image: {{ .Values.protected.images.tfServing }}
           ports:
             - containerPort: 8500
               name: grpc
             - containerPort: 8501
           env:
             - name: MODEL_NAME
-              value: "cifar10_model"
+              value: {{ .Values.protected.model.name | quote }}
             - name: MODEL_BASE_PATH
               value: "/models"
           volumeMounts:
             - name: shared-model
               mountPath: /models
-          resources:
-            requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 1
-              memory: 2Gi
+          resources: {{ toYaml .Values.protected.resources.tfServing | nindent 12 }}
           readinessProbe:
             tcpSocket:
               port: 8500
             initialDelaySeconds: 5
             periodSeconds: 5
+{{ end }}

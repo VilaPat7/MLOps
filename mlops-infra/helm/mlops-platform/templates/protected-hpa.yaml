@@ -1,0 +1,21 @@
+{{ if and .Values.protected.enabled .Values.protected.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cifar10-inference-hpa
+  namespace: {{ .Values.namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cifar10-inference
+  minReplicas: {{ .Values.protected.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.protected.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.protected.autoscaling.targetCPUUtilization }}
+{{ end }}

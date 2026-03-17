@@ -10,25 +10,25 @@ if minikube status | grep -q "Running"; then
 else
     echo "   ❌ Minikube is not running"
     echo "   Starting Minikube..."
-    minikube start --memory=8192 --cpus=4 --addons=ingress --cni=bridge
+    minikube start --memory=12288 --cpus=6 --addons=ingress --cni=bridge
 fi
 echo ""
 
 # 2. KFP check
-echo "2. Kubeflow Pipelines:"
-KFP_PODS=$(kubectl get pods -n kubeflow-pipelines 2>/dev/null | grep -c "Running")
-if [ "$KFP_PODS" -ge 2 ]; then
-    echo "   ✅ KFP is running ($KFP_PODS pods)"
-else
-    echo "   ❌ KFP is not running ($KFP_PODS pods)"
-    echo "   Starting KFP..."
-    kubectl apply -f ~/mlops-infra/k8s/kfp/namespace.yaml 2>/dev/null
-    kubectl apply -f ~/mlops-infra/k8s/storage/kfp-storage.yaml 2>/dev/null
-    kubectl apply -f ~/mlops-infra/k8s/kfp/kfp-minimal.yaml 2>/dev/null
-    echo "   Waiting for KFP pods to start..."
-    sleep 10
-fi
-echo ""
+# echo "2. Kubeflow Pipelines:"
+# KFP_PODS=$(kubectl get pods -n kubeflow-pipelines 2>/dev/null | grep -c "Running")
+# if [ "$KFP_PODS" -ge 2 ]; then
+#     echo "   ✅ KFP is running ($KFP_PODS pods)"
+# else
+#     echo "   ❌ KFP is not running ($KFP_PODS pods)"
+#     echo "   Starting KFP..."
+ #    kubectl apply -f ~/mlops-infra/k8s/kfp/namespace.yaml 2>/dev/null
+ #    kubectl apply -f ~/mlops-infra/k8s/storage/kfp-storage.yaml 2>/dev/null
+ #    kubectl apply -f ~/mlops-infra/k8s/kfp/kfp-minimal.yaml 2>/dev/null
+ #    echo "   Waiting for KFP pods to start..."
+ #    sleep 10
+# fi
+# echo ""
 
 # 3. MLflow check
 echo "3. MLflow:"

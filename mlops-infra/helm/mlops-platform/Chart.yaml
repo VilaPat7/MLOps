@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mlops-platform
+description: MLOps platform with all components (MLflow, baseline inference, protected inference, Istio)
+type: application
+version: 1.0.0

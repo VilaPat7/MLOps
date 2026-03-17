@@ -1,0 +1,6 @@
+{{ if .Values.mlflow.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.mlflow.namespace }}
+{{ end }}

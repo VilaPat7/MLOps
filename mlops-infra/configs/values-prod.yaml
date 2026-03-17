@@ -1,0 +1,83 @@
+# Основные параметры для развёртывания
+namespace: default
+
+# MLflow
+mlflow:
+  enabled: false
+  namespace: mlflow-system
+  postgresql:
+    image: postgres:13
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+  minio:
+    image: minio/minio:latest
+    accessKey: minioadmin
+    secretKey: minioadmin
+  server:
+    # если используете свой образ, укажите его; можно взять официальный, но тогда надо адаптировать
+    image: vika123vika/mlflow-server:latest
+    trackingPort: 5000
+
+# Базовый инференс (без защиты) – для Конфигурации 1
+baseline:
+  enabled: false
+  image: tensorflow/serving:2.13.0
+  modelName: cifar10_model
+  modelBasePath: /models
+  pvc:
+    name: model-pvc
+    size: 1Gi
+  loader:
+    # образ, который копирует модель из MinIO в PVC (можно использовать busybox + скрипт)
+    image: vika123vika/model-loader:latest
+    bucket: mlflow
+    modelPath: "artifacts/1/0544b6cf676b466eb4e12bff72ed22a6/artifacts/model"   # замените на реальный путь
+
+# Защищённый инференс – для Конфигурации 2 и 3
+protected:
+  enabled: true
+  model:
+    name: cifar10_model
+    stage: Production
+    # путь к модели в MinIO (ваш run_id)
+    prefix: "artifacts/1/0544b6cf676b466eb4e12bff72ed22a6/artifacts/model"
+  minio:
+    endpoint: "http://minio.mlflow-system.svc.cluster.local:9000"
+    accessKey: minioadmin
+    secretKey: minioadmin
+  publicKey: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtLYv9nISSb9ezDWTJ69M
+    lCq09Wm5MO4nyKitJnuvoY9c9Hwp1FoU3fFmeHxSAMQ6wCo8tqnUn+iGn4ZbFlU9
+    THXW6L5kpuPbJcF0sjiFjlpB6ke4ZPyFGQQq9aiDS68XMvUKpOQnvFyKD3LTGzqS
+    4Yg5/IaQhkIyfaFPOsijqpBrvAcYay3OEXObsSzwQ1ZDCpaJaAVTlYe6Ua4uhQrU
+    GPLNylCpoMNf+RxBt34Tn/U27AlTiLH/habQiwFmtskOHr5Jr+SGsdk1x9z43NSr
+    aA3hIgsLNs+zYuF4py+zW8PIhaGroFniwR5SilTuKY7TZcxWsddRihYTp5bQW4AG
+    bwIDAQAB
+    -----END PUBLIC KEY-----
+  images:
+    preprocessor: vika123vika/inference-preprocessor:latest
+    tfServing: tensorflow/serving:2.13.0
+  resources:
+    preprocessor:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    tfServing:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilization: 70
+
+# Политики Istio
+istio:
+  enabled: true
+  jwt:
+    issuer: "testing@secure.istio.io"
+    jwksUri: "https://raw.githubusercontent.com/istio/istio/release-1.19/security/tools/jwt/samples/jwks.json"

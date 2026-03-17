@@ -1,0 +1,13 @@
+{{ if .Values.baseline.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.baseline.pvc.name }}
+  namespace: {{ .Values.namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.baseline.pvc.size }}
+{{ end }}

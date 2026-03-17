@@ -1,0 +1,35 @@
+{{ if .Values.baseline.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-serving-baseline
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tf-serving-baseline
+  template:
+    metadata:
+      labels:
+        app: tf-serving-baseline
+    spec:
+      containers:
+      - name: tf-serving
+        image: {{ .Values.baseline.image }}
+        args:
+        - --model_name={{ .Values.baseline.modelName }}
+        - --model_base_path={{ .Values.baseline.modelBasePath }}/{{ .Values.baseline.modelName }}
+        ports:
+        - containerPort: 8500
+          name: grpc
+        - containerPort: 8501
+          name: http
+        volumeMounts:
+        - name: model-storage
+          mountPath: {{ .Values.baseline.modelBasePath }}
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: {{ .Values.baseline.pvc.name }}
+{{ end }}

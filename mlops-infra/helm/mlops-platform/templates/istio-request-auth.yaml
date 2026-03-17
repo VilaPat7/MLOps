@@ -1,0 +1,14 @@
+{{ if .Values.istio.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: jwt-auth
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: cifar10-inference
+  jwtRules:
+    - issuer: {{ .Values.istio.jwt.issuer | quote }}
+      jwksUri: {{ .Values.istio.jwt.jwksUri | quote }}
+{{ end }}

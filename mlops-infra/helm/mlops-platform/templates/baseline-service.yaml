@@ -1,0 +1,17 @@
+{{ if .Values.baseline.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: tf-serving-baseline
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: tf-serving-baseline
+  ports:
+    - name: grpc
+      port: 8500
+      targetPort: 8500
+    - name: http
+      port: 8501
+      targetPort: 8501
+{{ end }}

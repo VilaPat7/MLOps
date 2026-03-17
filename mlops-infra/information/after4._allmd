@@ -1,0 +1,266 @@
+. Полное описание инфраструктуры
+Проект представляет собой MLOps-платформу с элементами безопасности (Security Gates), развёрнутую в локальном Kubernetes-кластере Minikube. Она автоматизирует полный жизненный цикл моделей машинного обучения: от экспериментов и обучения до защищённого инференса. Ключевые компоненты:
+
+Minikube – локальный кластер Kubernetes для разработки и тестирования.
+
+MLflow – центральный хаб для управления экспериментами, моделями и артефактами (Tracking Server, Model Registry, PostgreSQL, MinIO).
+
+TensorFlow Serving (базовый) – отдельный deployment для незащищённого инференса (используется как baseline для сравнения).
+
+Istio – сервисная сетка для управления трафиком и обеспечения безопасности (JWT-аутентификация).
+
+Prometheus + Grafana – система мониторинга (установлена, но не активно используется на данном этапе).
+
+Kubeflow Pipelines – оркестратор пайплайнов обучения (установлен, но из-за проблем с UI не использовался; API доступен).
+
+Компоненты безопасности (Security Gates) – набор контейнеризованных скриптов для проверок:
+
+Gate 1 – проверка данных (data poisoning).
+
+Gate 2 – дифференциальная приватность (встроена в обучение).
+
+Gate 3 – проверка качества модели.
+
+Gate 4 – подпись и верификация модели (RSA).
+
+Gate 5 – валидация запросов и детекция аномалий.
+
+Gate 6 – JWT-аутентификация через Istio.
+
+Защищённый инференс-сервис – кастомный FastAPI-сервер (preprocessor) в паре с TensorFlow Serving, реализующий Gates 4, 5, 6.
+
+Инфраструктура спроектирована для воспроизводимости и автоматизации (Helm-чарты, скрипты) и позволяет проводить эксперименты по безопасности (атаки ML01–ML05) с тремя конфигурациями: базовая, частично защищённая, полностью защищённая.
+
+2. Дерево папок с описанием
+text
+~/mlops-infra/
+├── README.md                                  # Основная документация проекта
+├── BASELINE-README.md                          # Документация по базовому решению CIFAR-10
+├── istio-1.19.0/                               # Дистрибутив Istio (установочные файлы)
+│
+├── k8s/                                         # Все манифесты Kubernetes
+│   ├── kfp/                                     # Kubeflow Pipelines
+│   │   ├── namespace.yaml                        # Создаёт namespace kubeflow-pipelines
+│   │   └── kfp-minimal.yaml                      # Установка KFP (не используется, но сохранено)
+│   ├── mlflow/                                   # MLflow
+│   │   ├── namespace.yaml                         # Namespace mlflow-system
+│   │   ├── postgresql.yaml                        # PostgreSQL StatefulSet (база данных)
+│   │   ├── minio.yaml                             # MinIO Deployment (S3-хранилище артефактов)
+│   │   └── mlflow-server.yaml                      # MLflow Tracking Server Deployment
+│   ├── tf-serving/                                # Базовый (незащищённый) инференс
+│   │   ├── model-pvc.yaml                          # PVC для хранения модели
+│   │   ├── model-loader-job.yaml                    # Job для копирования модели из MinIO в PVC
+│   │   ├── tf-serving-deployment.yaml                 # Deployment TensorFlow Serving
+│   │   └── tf-serving-service.yaml                    # Service для доступа к базовому инференсу
+│   ├── monitoring/                                # Prometheus + Grafana
+│   │   ├── prometheus.yaml
+│   │   └── grafana.yaml
+│   └── inference/                                 # Защищённый инференс (Этап 4)
+│       ├── secret-mlflow.yaml                      # Секрет с публичным ключом и данными MinIO
+│       ├── deployment.yaml                          # Pod с двумя контейнерами: preprocessor и tf-serving
+│       ├── service.yaml                             # ClusterIP для доступа к preprocessor
+│       └── hpa.yaml                                 # HorizontalPodAutoscaler
+│
+├── scripts/                                      # Вспомогательные bash-скрипты
+│   ├── check-and-start.sh                          # Проверка и запуск инфраструктуры
+│   ├── access-all.sh                                # Port-forward для всех UI (MLflow, Grafana, KFP)
+│   ├── stop-all.sh                                  # Остановка port-forward и Minikube
+│   ├── quick-status.sh                              # Краткий статус компонентов
+│   ├── install-istio-kserve.sh                      # Установка Istio и KServe (не используется)
+│   ├── run-baseline.sh                               # Запуск базового пайплайна обучения
+│   ├── test-model.sh                                 # Тестирование базового инференса
+│   ├── generate_keys.sh                              # Генерация RSA-ключей (private.pem, public.pem)
+│   └── build_push_gates.sh                           # Сборка всех образов гейтов (Gate 1,3,4,5)
+│
+├── docker/                                       # Docker-образы
+│   ├── train/                                      # Обучение модели CIFAR-10
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── train.py                                  # Скрипт обучения с поддержкой DP и логированием в MLflow
+│   ├── gates/                                       # Компоненты гейтов
+│   │   ├── gate1_data_validation/                    # Gate 1: проверка целостности данных
+│   │   ├── gate3_model_validation/                    # Gate 3: проверка качества модели
+│   │   ├── gate4_signature_verify/                    # Gate 4: подпись и верификация модели
+│   │   │   ├── sign_model.py                          # Подписание модели (исправленный)
+│   │   │   └── sign_local.py                          # Подписание локальной модели
+│   │   ├── gate5_inference_preprocess/                # Gate 5: препроцессинг и детекция аномалий
+│   │   └── register_model/                             # Регистрация модели в MLflow Model Registry
+│   └── inference/                                   # Защищённый инференс
+│       └── preprocessor/
+│           ├── Dockerfile                             # Сборка образа inference-preprocessor
+│           ├── requirements.txt                        # Зависимости (fastapi, uvicorn, boto3, mlflow...)
+│           ├── main.py                                 # FastAPI-сервер с эндпоинтом /predict
+│           ├── model_loader.py                         # Загрузка модели из MinIO, проверка подписи (Gate 4)
+│           ├── prepost_processor.py                    # Pydantic-валидация, детекция аномалий (Gate 5), пре/постобработка
+│           └── anomaly_detector.pkl                     # Заглушка детектора (DummyClassifier)
+│
+├── baseline/                                      # Базовый пайплайн обучения
+│   └── train-job.yaml                               # Kubernetes Job для обучения (используется в run-baseline.sh)
+│
+├── pipelines/                                      # Скрипты пайплайнов Kubeflow
+│   ├── secure_training_pipeline.py                   # Определение пайплайна с гейтами
+│   └── secure_pipeline.tar.gz                        # Скомпилированный пайплайн
+│
+└── istio/                                          # Политики безопасности Istio (Gate 6)
+    ├── request-auth.yaml                             # RequestAuthentication (проверка JWT)
+    └── auth-policy.yaml                              # AuthorizationPolicy (доступ только с валидным JWT)
+3. Взаимодействие компонентов
+Обучение модели (базовое или через пайплайн):
+
+run-baseline.sh запускает train-job.yaml → под обучения обучает модель CIFAR-10, сохраняет её в MinIO и логирует в MLflow Tracking.
+
+Если используется защищённый пайплайн (Kubeflow), то после обучения выполняются гейты: проверка данных (Gate 1), проверка качества (Gate 3), подписание (Gate 4), верификация, регистрация в Model Registry со стадией Staging.
+
+Регистрация подписанной модели:
+
+Вручную или через пайплайн модель подписывается приватным ключом, создаётся файл signature.sig.
+
+Подпись загружается в артефакты того же run (через MLflow UI или Python).
+
+Модель переводится в статус Production (вручную).
+
+Защищённый инференс-сервис:
+
+Deployment cifar10-inference создаёт под с двумя контейнерами: preprocessor и tf-serving.
+
+При старте preprocessor:
+
+Загружает модель из MinIO по известному пути (из MLFLOW_MODEL_PREFIX).
+
+Проверяет подпись (Gate 4) с помощью публичного ключа из секрета.
+
+Копирует модель в общую папку /shared/models/1.
+
+tf-serving автоматически загружает модель из /models/1 и начинает обслуживать gRPC-запросы на порту 8500.
+
+Обработка запроса клиента:
+
+Клиент отправляет HTTP POST с JWT-токеном на http://<ingress>/v1/models/cifar10:predict.
+
+Istio sidecar проверяет токен (Gate 6). Если токена нет или он недействителен – возвращается 403.
+
+Запрос попадает в preprocessor (порт 8080):
+
+validate_input() (Pydantic) проверяет структуру JSON; если неверный формат – возвращается 400.
+
+detect_anomalies() прогоняет данные через anomaly_detector.pkl; при обнаружении аномалии – 403.
+
+Данные нормализуются и отправляются по gRPC в tf-serving.
+
+tf-serving возвращает предсказание.
+
+postprocess() преобразует результат в JSON и возвращается клиенту.
+
+Базовый инференс (отдельный Deployment) работает параллельно и не имеет защиты – используется для сравнения в экспериментах Этапа 6.
+
+Мониторинг и масштабирование:
+
+HPA автоматически увеличивает количество реплик при росте CPU.
+
+Prometheus и Grafana собирают метрики (хотя активно не используются).
+
+4. Подробное описание этапов 1–4
+Этап 1: Подготовка инфраструктуры и базового решения
+Цель: Развернуть базовую MLOps-инфраструктуру в Minikube и создать простой пайплайн обучения без защиты.
+
+Что сделано:
+
+Запущен Minikube с параметрами --cpus=6 --memory=12288 --addons=ingress --cni=bridge.
+
+Установлены:
+
+MLflow (namespace mlflow-system): PostgreSQL (база данных), MinIO (S3-хранилище), Tracking Server.
+
+TensorFlow Serving (namespace default): отдельный Deployment для базового инференса, PVC для модели, Job model-loader для копирования модели из MinIO.
+
+Istio – установлен, но пока не активен.
+
+Prometheus + Grafana – для мониторинга (установлены, не используются).
+
+Создан скрипт run-baseline.sh, запускающий обучение модели CIFAR-10 через Kubernetes Job (train-job.yaml). Модель сохраняется в MinIO и логируется в MLflow.
+
+Этап 2: Разработка компонентов Security Gates
+Цель: Создать контейнеризованные компоненты (гейты) для проверок безопасности.
+
+Что сделано:
+
+Созданы Docker-образы в docker/gates/:
+
+Gate 1 (gate1_data_validation): проверка целостности данных (data poisoning) – анализ распределения меток.
+
+Gate 2 – интегрирован в обучение как опция --enable-dp (дифференциальная приватность через Opacus).
+
+Gate 3 (gate3_model_validation): проверка качества модели (accuracy).
+
+Gate 4 (gate4_signature_verify): подпись (sign_model.py) и верификация (verify_signature.py) модели с помощью RSA-ключей.
+
+Gate 5 (gate5_inference_preprocess): Pydantic-валидация и детекция аномалий (заглушка anomaly_detector.pkl).
+
+register_model: регистрация модели в MLflow Model Registry.
+
+Сгенерированы ключи (generate_keys.sh): private.pem (приватный), public.pem (публичный).
+
+Этап 3: Построение тренировочного пайплайна
+Цель: Оркестровать выполнение гейтов в едином пайплайне обучения.
+
+Что сделано:
+
+Написан скрипт secure_training_pipeline.py с использованием KFP SDK, определяющий граф:
+
+Data Validation (Gate 1) → Training (с/без DP) → Model Validation (Gate 3) → Signing → Verification (Gate 4) → Registration.
+
+Реализована условная логика остановки пайплайна при неудаче любого гейта.
+
+Пайплайн скомпилирован в secure_pipeline.tar.gz. Из-за проблем с Kubeflow (неработающий UI) он не был запущен, но все артефакты созданы.
+
+Этап 4: Создание защищённого сервиса инференса
+Цель: Развернуть масштабируемый и безопасный эндпоинт для предсказаний, интегрировав Gates 4, 5 и 6.
+
+Что сделано:
+
+Разработан Docker-образ inference-preprocessor:
+
+model_loader.py: загружает модель из MinIO (минуя MLflow API), проверяет подпись (Gate 4) с помощью публичного ключа из секрета.
+
+prepost_processor.py: Pydantic-модель CIFAR10Input (ожидает изображения 32×32×3), детектор аномалий (заглушка DummyClassifier), функции пре/постобработки.
+
+main.py: FastAPI-сервер с эндпоинтом /v1/models/cifar10:predict. При старте вызывает prepare_model(), при запросе валидирует данные, прогоняет через детектор, отправляет gRPC в локальный TensorFlow Serving, возвращает результат.
+
+Написаны Kubernetes-манифесты в k8s/inference/:
+
+secret-mlflow.yaml: секрет с публичным ключом и учётными данными MinIO.
+
+deployment.yaml: под с двумя контейнерами (preprocessor и tf-serving), общая папка emptyDir, ресурсы, пробы.
+
+service.yaml: ClusterIP для доступа к preprocessor (порт 80 → 8080).
+
+hpa.yaml: горизонтальное масштабирование по CPU.
+
+Настроены политики Istio (Gate 6) в istio/:
+
+request-auth.yaml: проверка JWT-токенов на входящих запросах.
+
+auth-policy.yaml: разрешён доступ только с валидным JWT.
+
+В ходе выполнения решены проблемы:
+
+Недоступность MLflow API из-за проверки Host header → переход на прямой доступ к MinIO.
+
+Пустой файл anomaly_detector.pkl → замена на корректный pickle с DummyClassifier.
+
+Несовместимость алгоритмов подписи → исправлен sign_model.py (подписывает хеш модели, а не строку URI).
+
+Неполное скачивание модели → улучшена функция download_from_minio в model_loader.py.
+
+Отсутствие модели в MinIO → загружена полная модель вместе с подписью.
+
+Итог: поды запускаются, в логах появились строки:
+
+text
+[DEBUG] Model hash (hex): dac039578959c15a65591f0f041092dde8a3ae89dc3659fc99a4980e6fc1fb85
+INFO:model_loader:✅ Подпись модели верна
+INFO:model_loader:✅ Модель скопирована в /shared/models/1
+INFO:main:✅ Модель успешно загружена и проверена
+INFO:     Application startup complete.
+Это означает, что сервис работает, модель загружена, подпись проверена, приложение готово принимать запросы.
+
