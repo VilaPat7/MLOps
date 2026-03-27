@@ -1,9 +1,12 @@
 import os
 import pickle
 import numpy as np
+import tensorflow as tf
 from pydantic import BaseModel, validator
 from typing import List, Optional
 import logging
+
+
 
 logger = logging.getLogger(__name__)
 

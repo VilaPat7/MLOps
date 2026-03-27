@@ -90,7 +90,7 @@ def download_from_minio(bucket: str, prefix: str, local_dir: str):
             logger.info(f"Скачан {key} -> {local_file}")
     logger.info(f"Всего скачано файлов: {file_count}")
 
-def prepare_model(target_dir: str = "/shared/models/1"):
+def prepare_model(target_dir: str = "/shared/models/cifar10_model/1"):
     """Загружает модель и подпись из MinIO, проверяет подпись и копирует в target_dir."""
     public_key_path = os.getenv("PUBLIC_KEY_PATH", "/app/keys/public_key.pem")
     public_key = load_public_key(public_key_path)
@@ -115,8 +115,14 @@ def prepare_model(target_dir: str = "/shared/models/1"):
         
         # Копируем в целевую директорию
         os.makedirs(target_dir, exist_ok=True)
-        for item in os.listdir(model_path):
-            s = os.path.join(model_path, item)
+        model_source = os.path.join(model_path, "data", "model")
+        if not os.path.exists(model_source):
+            # если модель в корне, копируем всё
+            model_source = model_path
+
+        logger.info(f"Копируем модель из {model_source} в {target_dir}")
+        for item in os.listdir(model_source):
+            s = os.path.join(model_source, item)
             d = os.path.join(target_dir, item)
             if os.path.isdir(s):
                 shutil.copytree(s, d, dirs_exist_ok=True)

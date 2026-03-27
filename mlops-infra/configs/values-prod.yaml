@@ -58,7 +58,7 @@ protected:
     bwIDAQAB
     -----END PUBLIC KEY-----
   images:
-    preprocessor: vika123vika/inference-preprocessor:latest
+    preprocessor: inference-preprocessor:final
     tfServing: tensorflow/serving:2.13.0
   resources:
     preprocessor:
