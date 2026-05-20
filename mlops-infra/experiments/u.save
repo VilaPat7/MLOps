@@ -1,0 +1,6 @@
+ kubectl top pod test-inference --containers
+POD              NAME             CPU(cores)   MEMORY(bytes)   
+test-inference   istio-proxy      3m           38Mi            
+test-inference   test-inference   219m         55Mi  
+test-inference   tf-serving       30m          400Mi
+

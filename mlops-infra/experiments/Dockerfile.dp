@@ -1,0 +1,9 @@
+FROM tensorflow/tensorflow:2.14.0
+
+RUN apt-get update && apt-get install -y python3-pip
+RUN pip install --upgrade pip
+RUN pip install tensorflow-privacy==0.9.0
+RUN pip install numpy scikit-learn matplotlib
+
+WORKDIR /workspace
+COPY train_simple.py train_dp_fixed.py mia_attack_final.py ./
