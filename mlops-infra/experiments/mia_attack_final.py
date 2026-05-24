@@ -19,7 +19,6 @@ y_test_cat = tf.keras.utils.to_categorical(y_test, 10)
 model_baseline = tf.keras.models.load_model("cifar10_baseline.h5")
 model_dp = tf.keras.models.load_model("cifar10_dp_model.h5")
 
-# Baseline
 loss_train_base = extract_losses(model_baseline, x_train, y_train_cat)
 loss_test_base = extract_losses(model_baseline, x_test, y_test_cat)
 X_base = np.concatenate([loss_train_base.reshape(-1,1), loss_test_base.reshape(-1,1)])
@@ -30,7 +29,6 @@ clf.fit(X_train, y_train_mia)
 acc_base = accuracy_score(y_val_mia, clf.predict(X_val))
 print(f"Baseline MIA accuracy: {acc_base:.3f}")
 
-# DP
 loss_train_dp = extract_losses(model_dp, x_train, y_train_cat)
 loss_test_dp = extract_losses(model_dp, x_test, y_test_cat)
 X_dp = np.concatenate([loss_train_dp.reshape(-1,1), loss_test_dp.reshape(-1,1)])

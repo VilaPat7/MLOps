@@ -1,5 +1,5 @@
 name: Train CIFAR-10 with DP
-description: Обучение CNN на CIFAR-10 с дифференциальной приватностью
+description: CNN Training on CIFAR-10 with Differential Privacy
 inputs:
   - {name: data_path, type: String}
   - {name: epochs, type: Integer, default: '5'}

@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""
-Обучение модели CIFAR-10 с гейтами 1 и 3.
-Gate 1: детектор ResNet-20, обученный на чистых данных (50 эпох, аугментация).
-Фильтрация: удаляем образцы, где предсказание не совпадает с меткой ИЛИ уверенность < 0.95.
-Gate 3: проверка качества.
-"""
 import argparse
 import numpy as np
 import tensorflow as tf
@@ -17,7 +11,6 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-# ---------- ResNet-20 для CIFAR-10 (детектор) ----------
 def residual_block(x, filters, kernel_size=3, stride=1):
     shortcut = x
     if stride != 1 or x.shape[-1] != filters:
@@ -37,7 +30,6 @@ def create_detector(input_shape=(32,32,3), num_classes=10):
     x = Conv2D(16, 3, padding='same', use_bias=False)(inputs)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
-    # 3 группы residual блоков: (16,3,1), (32,3,2), (64,3,2)
     for filters, num_blocks, stride in [(16,3,1), (32,3,2), (64,3,2)]:
         for i in range(num_blocks):
             s = stride if i == 0 else 1
@@ -47,7 +39,6 @@ def create_detector(input_shape=(32,32,3), num_classes=10):
     model = Model(inputs, outputs)
     return model
 
-# ---------- Простая финальная модель ----------
 def create_final_model():
     model = Sequential([
         Conv2D(32, (3,3), activation='relu', input_shape=(32,32,3)),
@@ -63,12 +54,11 @@ def create_final_model():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--no-gates', action='store_true', help='Отключить гейты 1 и 3')
-    parser.add_argument('--poisoned', type=str, help='Путь к отравленному датасету .npz')
-    parser.add_argument('--epochs', type=int, default=30, help='Эпохи финального обучения')
+    parser.add_argument('--no-gates', action='store_true', help='Disable gates 1 и 3')
+    parser.add_argument('--poisoned', type=str, help='The path to the poisoned dataset .npz')
+    parser.add_argument('--epochs', type=int, default=30, help='The Epochs of Final Learning')
     args = parser.parse_args()
 
-    # Загрузка отравленных данных
     if args.poisoned:
         data = np.load(args.poisoned)
         x_train_poisoned = data['x_train']
@@ -86,14 +76,12 @@ def main():
 
     if not args.no_gates:
         print("[Gate 3] Quality check passed")
-        # Загрузка чистого CIFAR-10 для обучения детектора
         (x_clean, y_clean), (x_clean_test, y_clean_test) = cifar10.load_data()
         x_clean = x_clean.astype('float32') / 255.0
         y_clean = to_categorical(y_clean, 10)
         x_clean_test = x_clean_test.astype('float32') / 255.0
         y_clean_test = to_categorical(y_clean_test, 10)
 
-        # Аугментация для детектора
         datagen = ImageDataGenerator(
             rotation_range=15,
             width_shift_range=0.1,
@@ -117,17 +105,14 @@ def main():
                      callbacks=callbacks,
                      verbose=1)
 
-        # Оценка детектора
         _, det_acc = detector.evaluate(x_clean_test, y_clean_test, verbose=0)
         print(f"[Gate 1] Detector accuracy on clean test set: {det_acc:.4f}")
 
-        # Предсказания на отравленных данных
         pred_probs = detector.predict(x_train_poisoned, verbose=0)
         pred_labels = np.argmax(pred_probs, axis=1)
         true_labels = np.argmax(y_train_poisoned, axis=1)
         confidences = np.max(pred_probs, axis=1)
 
-        # Жёсткая фильтрация: оставляем только образцы, где предсказание совпадает с меткой И уверенность >= 0.95
         keep_mask = (pred_labels == true_labels) & (confidences >= 0.95)
         x_train = x_train_poisoned[keep_mask]
         y_train = y_train_poisoned[keep_mask]
@@ -136,7 +121,6 @@ def main():
     else:
         x_train, y_train = x_train_poisoned, y_train_poisoned
 
-    # Финальная модель
     final_model = create_final_model()
     final_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     final_model.fit(x_train, y_train, batch_size=64, epochs=args.epochs,

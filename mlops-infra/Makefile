@@ -1,4 +1,3 @@
-# Переменные
 REGISTRY ?= docker.io/vika123vika
 TAG ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "latest")
 
@@ -6,11 +5,9 @@ TAG ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "latest")
 
 all: build-train build-gates build-inference
 
-# Образ для обучения
 build-train:
 	cd docker/train && DOCKER_BUILDKIT=0 docker build -t $(REGISTRY)/cifar10-train:$(TAG) .
 
-# Сборка образов гейтов
 build-gates: build-gate1 build-gate3 build-gate4 build-gate5 build-register
 
 build-gate1:
@@ -28,11 +25,9 @@ build-gate5:
 build-register:
 	cd docker/gates/register_model && DOCKER_BUILDKIT=0 docker build -t $(REGISTRY)/cifar10-register:$(TAG) .
 
-# Образ preprocessor
 build-inference:
 	cd docker/inference/preprocessor && DOCKER_BUILDKIT=0 docker build -t $(REGISTRY)/inference-preprocessor:$(TAG) .
 
-# Публикация всех образов
 push-all: push-train push-gates push-inference
 
 push-train:
@@ -48,11 +43,9 @@ push-gates:
 push-inference:
 	docker push $(REGISTRY)/inference-preprocessor:$(TAG)
 
-# Сборка прямо в окружении Minikube (для локального тестирования)
 minikube-build:
 	eval $$(minikube docker-env) && make all
 
-# Helm цели
 helm-install:
 	helm install mlops-platform ./helm/mlops-platform --namespace default --create-namespace --values configs/values-prod.yaml --wait
 

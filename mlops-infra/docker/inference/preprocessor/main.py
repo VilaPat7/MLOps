@@ -11,10 +11,8 @@ class PredictRequest(BaseModel):
 
 @app.post("/v1/models/cifar10:predict")
 async def predict(request: PredictRequest):
-    # С вероятностью 90% отклоняем запрос (аномалия)
     if random.random() < 0.9:
         raise HTTPException(status_code=403, detail="Anomaly detected")
-    # Иначе возвращаем фиктивное предсказание (класс 5)
     return {"predictions": [5]}
 
 @app.get("/health")

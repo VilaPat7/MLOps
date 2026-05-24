@@ -3,15 +3,12 @@ set -e
 
 echo "=== Installing MLflow Server ==="
 
-# 1. Create namespace
 echo "Creating namespace mlflow-system..."
 kubectl create namespace mlflow-system --dry-run=client -o yaml | kubectl apply -f -
 
-# 2. Create directories in Minikube
 echo "Creating directories for MLflow..."
 minikube ssh "sudo mkdir -p /data/mlflow-postgres /data/mlflow-minio && sudo chmod 777 /data/mlflow-postgres /data/mlflow-minio"
 
-# 3. Install PostgreSQL
 echo "Installing PostgreSQL..."
 cat <<'PGEOF' | kubectl apply -f -
 apiVersion: v1
@@ -84,7 +81,6 @@ spec:
     app: postgresql
 PGEOF
 
-# 4. Install MinIO
 echo "Installing MinIO for artifacts..."
 cat <<'MINIOEOF' | kubectl apply -f -
 apiVersion: v1
@@ -159,7 +155,6 @@ spec:
     app: minio
 MINIOEOF
 
-# 5. Install MLflow Tracking Server
 echo "Installing MLflow Tracking Server..."
 cat <<'MLFLOWEOF' | kubectl apply -f -
 apiVersion: apps/v1
@@ -208,11 +203,9 @@ spec:
     app: mlflow-server
 MLFLOWEOF
 
-# 6. Wait for startup
 echo "Waiting for components to start (120 seconds)..."
 sleep 120
 
-# 7. Verify installation
 echo "=== MLflow Installation Verification ==="
 kubectl get pods -n mlflow-system
 kubectl get svc -n mlflow-system

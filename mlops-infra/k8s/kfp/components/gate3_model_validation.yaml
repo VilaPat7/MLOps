@@ -1,5 +1,5 @@
 name: Model Validation
-description: Проверка качества модели
+description: Model quality control
 inputs:
   - {name: model_uri, type: String}
   - {name: test_data, type: String}

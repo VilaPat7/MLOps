@@ -23,7 +23,7 @@ x_test = x_test.astype('float32') / 255.0
 y_train = to_categorical(y_train, 10)
 y_test = to_categorical(y_test, 10)
 
-batch_size = 64          # уменьшили для стабильности
+batch_size = 64
 epochs = 10
 noise_multiplier = 1.1
 l2_norm_clip = 1.0
@@ -33,7 +33,7 @@ print(f"DP training with noise_multiplier={noise_multiplier}, epochs={epochs}, b
 optimizer = DPKerasSGDOptimizer(
     l2_norm_clip=l2_norm_clip,
     noise_multiplier=noise_multiplier,
-    num_microbatches=None,   # авто-подбор, чтобы избежать ошибки деления
+    num_microbatches=None,
     learning_rate=0.001
 )
 

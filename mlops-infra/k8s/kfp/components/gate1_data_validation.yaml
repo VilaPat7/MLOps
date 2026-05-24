@@ -1,5 +1,5 @@
 name: Data Validation
-description: Проверка целостности данных
+description: Data integrity check
 inputs:
   - {name: data_path, type: String}
   - {name: threshold_sigma, type: Float, default: '3.0'}

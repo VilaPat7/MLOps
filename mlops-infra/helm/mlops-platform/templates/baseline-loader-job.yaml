@@ -33,5 +33,4 @@ spec:
           value: {{ .Values.baseline.loader.modelPath }}
         - name: PVC_NAME
           value: {{ .Values.baseline.pvc.name }}
-        # предполагается, что образ содержит скрипт, который монтирует PVC и копирует модель
 {{ end }}

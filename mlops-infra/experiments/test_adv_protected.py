@@ -5,11 +5,8 @@ import numpy as np
 data = np.load("adv_examples.npz")
 x_adv = data['x_adv']
 
-# Если JWT отключён, заголовок Authorization не нужен
-# Если JWT включён, раскомментируйте следующую строку и замените токен
-# TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRlbW8iLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2NsdXN0ZXIubG9jYWwiLCJzdWIiOiJlbWFpbEBleGFtcGxlLmNvbSIsImVtYWlsIjoiZW1haWxAZXhhbXBsZS5jb20iLCJncm91cHMiOlsiZ3JvdXAxIiwiZ3JvdXAyIl0sIm5hbWUiOiJKb2huIERvZSIsImlhdCI6MTUxNjIzOTAyMn0.kMuAYrCj8f0gUjvFyWz--TzEnaqjuy4XKzJpL4GdKQx6rOqPkO9z5jJQo7qWv3mXhRfFQbY1k9cGfNlM"
-# headers = {"Authorization": f"Bearer {TOKEN}"}
-headers = {"Content-Type": "application/json"}   # без JWT
+
+headers = {"Content-Type": "application/json"} 
 
 rejected = 0
 total = len(x_adv)

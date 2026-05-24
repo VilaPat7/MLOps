@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# Переходим в корень проекта
 cd "$(dirname "$0")/.."
 
 echo "Building images from $(pwd)"

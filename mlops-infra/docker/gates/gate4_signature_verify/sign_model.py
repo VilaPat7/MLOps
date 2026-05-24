@@ -8,7 +8,6 @@ import mlflow
 import tempfile
 
 def compute_model_hash(model_path: str) -> bytes:
-    """Вычисляет SHA256 хеш всех файлов в папке модели (исключая signature.sig)"""
     hasher = hashlib.sha256()
     for root, _, files in os.walk(model_path):
         for file in sorted(files):
@@ -28,7 +27,6 @@ def main():
     parser.add_argument('--output-signature', required=True, help='Output file for signature (binary)')
     args = parser.parse_args()
 
-    # Загружаем приватный ключ
     with open(args.private_key, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
@@ -36,24 +34,19 @@ def main():
             backend=default_backend()
         )
 
-    # Скачиваем модель во временную папку
     with tempfile.TemporaryDirectory() as tmpdir:
         print(f"Downloading model from {args.model_uri} ...")
         local_path = mlflow.artifacts.download_artifacts(artifact_uri=args.model_uri, dst_path=tmpdir)
-        model_path = local_path  # предполагаем, что модель сохранена в подпапке
-        # Если модель сохранена как артефакт, может быть в подпапке, но обычно local_path и есть папка с моделью
+        model_path = local_path
 
-        # Вычисляем хеш
         model_hash = compute_model_hash(model_path)
 
-        # Подписываем хеш
         signature = private_key.sign(
             model_hash,
             padding.PKCS1v15(),
             hashes.SHA256()
         )
 
-        # Сохраняем подпись в бинарном виде (не JSON)
         with open(args.output_signature, "wb") as f:
             f.write(signature)
 

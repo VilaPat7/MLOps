@@ -23,8 +23,6 @@ done
 
 echo "4. Services exposed:"
 echo "   MLflow UI:        $(kubectl get svc mlflow-server -n mlflow-system 2>/dev/null | grep -q . && echo 'Ready' || echo 'Not found')"
-echo "   Grafana:          $(kubectl get svc grafana -n monitoring 2>/dev/null | grep -q . && echo 'Ready' || echo 'Not found')"
-echo "   Prometheus:       $(kubectl get svc prometheus -n monitoring 2>/dev/null | grep -q . && echo 'Ready' || echo 'Not found')"
 echo "   KFP UI:           $(kubectl get svc ml-pipeline-ui -n kubeflow-pipelines 2>/dev/null | grep -q . && echo 'Ready' || echo 'Not found')"
 echo "   Istio Ingress:    $(kubectl get svc istio-ingressgateway -n istio-system 2>/dev/null | grep -q . && echo 'Ready' || echo 'Not found')"
 echo ""

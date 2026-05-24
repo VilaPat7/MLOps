@@ -15,7 +15,7 @@ register_model_op = comp.load_component_from_file(base_dir + 'register_model.yam
 
 @dsl.pipeline(
     name='CIFAR-10 Secure Training Pipeline',
-    description='Обучение модели с проверками безопасности (Data Validation, DP, Model Validation, Signing, Registration)'
+    description='Model training with security checks (Data Validation, DP, Model Validation, Signing, Registration)'
 )
 def secure_pipeline(
     data_path: str = '/data/cifar10',

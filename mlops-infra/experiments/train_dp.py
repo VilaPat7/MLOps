@@ -51,7 +51,6 @@ def main():
     y_train = to_categorical(y_train, 10)
     y_test = to_categorical(y_test, 10)
 
-    # Приближённый подбор noise_multiplier (можно уточнить)
     noise_multiplier = 1.0 / args.eps if args.eps > 0 else 0.0
     if noise_multiplier < 0.1:
         noise_multiplier = 0.1

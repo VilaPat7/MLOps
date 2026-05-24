@@ -16,7 +16,6 @@ spec:
       serviceAccountName: kfp-service-account
       containers:
       - name: api-server
-        # Используем доступный образ из Docker Hub
         image: gcr.io/ml-pipeline/api-server:1.8.3
         ports:
         - containerPort: 8888
@@ -49,7 +48,6 @@ spec:
     spec:
       containers:
       - name: ui
-        # Используем доступный образ из Docker Hub
         image: gcr.io/ml-pipeline/frontend:1.8.3
         ports:
         - containerPort: 3000

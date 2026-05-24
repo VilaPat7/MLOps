@@ -1,5 +1,5 @@
 name: Signature Verification
-description: Проверка подписи URI модели
+description: Verifying the signature of the URI model
 inputs:
   - {name: model_uri, type: String}
   - {name: signature_file, type: String}

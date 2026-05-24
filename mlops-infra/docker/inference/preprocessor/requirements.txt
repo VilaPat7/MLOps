@@ -10,5 +10,4 @@ scikit-learn>=1.3,<2
 grpcio>=1.59,<2
 tensorflow-serving-api>=2.13,<2.16
 python-multipart
-# Явно укажем совместимую версию typing-extensions
 typing-extensions>=4.5.0

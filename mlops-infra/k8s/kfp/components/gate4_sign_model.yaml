@@ -1,5 +1,5 @@
 name: Sign Model
-description: Подписание URI модели приватным ключом
+description: Signing the URI model with a private key
 inputs:
   - {name: model_uri, type: String}
   - {name: private_key, type: String}

@@ -1,5 +1,5 @@
 name: Register Model in MLflow
-description: Регистрация модели в MLflow Model Registry
+description: Registering a model in the MLflow Model Registry
 inputs:
   - {name: model_uri, type: String}
   - {name: stage, type: String, default: 'Staging'}

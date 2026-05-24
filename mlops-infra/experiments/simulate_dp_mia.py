@@ -8,10 +8,9 @@ from sklearn.metrics import accuracy_score
 
 def extract_losses(model, x, y, noise_scale=0.0):
     pred = model.predict(x, verbose=0)
-    # Добавляем шум к предсказаниям (симулируем DP)
     if noise_scale > 0:
         pred = pred + np.random.normal(0, noise_scale, pred.shape)
-        pred = np.clip(pred, 1e-12, 1.0)  # не допускаем нулей
+        pred = np.clip(pred, 1e-12, 1.0)
         pred = pred / np.sum(pred, axis=1, keepdims=True)
     losses = -np.sum(y * np.log(pred + 1e-12), axis=1)
     return losses
@@ -25,7 +24,6 @@ def main():
 
     model = tf.keras.models.load_model("cifar10_baseline.h5")
 
-    # Без шума (обычная модель)
     loss_train = extract_losses(model, x_train, y_train_cat, noise_scale=0.0)
     loss_test = extract_losses(model, x_test, y_test_cat, noise_scale=0.0)
     X = np.concatenate([loss_train.reshape(-1,1), loss_test.reshape(-1,1)])
@@ -36,7 +34,6 @@ def main():
     acc_base = accuracy_score(y_val_mia, clf.predict(X_val))
     print(f"Baseline model MIA accuracy: {acc_base:.3f}")
 
-    # С шумом (симуляция DP)
     loss_train_dp = extract_losses(model, x_train, y_train_cat, noise_scale=0.8)
     loss_test_dp = extract_losses(model, x_test, y_test_cat, noise_scale=0.8)
     X_dp = np.concatenate([loss_train_dp.reshape(-1,1), loss_test_dp.reshape(-1,1)])

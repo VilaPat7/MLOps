@@ -1,7 +1,5 @@
-# Основные параметры для развёртывания
 namespace: default
 
-# MLflow
 mlflow:
   enabled: true
   namespace: mlflow-system
@@ -16,11 +14,9 @@ mlflow:
     accessKey: minioadmin
     secretKey: minioadmin
   server:
-    # если используете свой образ, укажите его; можно взять официальный, но тогда надо адаптировать
     image: vika123vika/mlflow-server:latest
     trackingPort: 5000
 
-# Базовый инференс (без защиты) – для Конфигурации 1
 baseline:
   enabled: true
   image: tensorflow/serving:2.13.0
@@ -30,18 +26,15 @@ baseline:
     name: model-pvc
     size: 1Gi
   loader:
-    # образ, который копирует модель из MinIO в PVC (можно использовать busybox + скрипт)
     image: vika123vika/model-loader:latest
     bucket: mlflow
-    modelPath: "artifacts/1/0544b6cf676b466eb4e12bff72ed22a6/artifacts/model"   # замените на реальный путь
+    modelPath: "artifacts/1/0544b6cf676b466eb4e12bff72ed22a6/artifacts/model"
 
-# Защищённый инференс – для Конфигурации 2 и 3
 protected:
   enabled: true
   model:
     name: cifar10_model
     stage: Production
-    # путь к модели в MinIO (ваш run_id)
     prefix: "artifacts/1/0544b6cf676b466eb4e12bff72ed22a6/artifacts/model"
   minio:
     endpoint: "http://minio.mlflow-system.svc.cluster.local:9000"
@@ -75,7 +68,6 @@ protected:
     maxReplicas: 10
     targetCPUUtilization: 70
 
-# Политики Istio
 istio:
   enabled: true
   jwt:

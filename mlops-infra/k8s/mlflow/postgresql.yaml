@@ -1,10 +1,9 @@
-# PersistentVolume - используем существующий storageClassName
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: mlflow-postgres-pv
 spec:
-  storageClassName: standard  # ← изменено с manual на standard
+  storageClassName: standard
   capacity:
     storage: 5Gi
   accessModes:
@@ -12,17 +11,16 @@ spec:
   hostPath:
     path: "/data/mlflow-postgres"
 ---
-# PersistentVolumeClaim - оставляем как есть
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mlflow-postgres-pvc
   namespace: mlflow-system
 spec:
-  storageClassName: standard  # ← изменено с manual на standard
+  storageClassName: standard
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 5Gi
-  volumeName: "mlflow-postgres-pv"  # Добавьте эту строку
+  volumeName: "mlflow-postgres-pv"

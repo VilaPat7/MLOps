@@ -42,10 +42,8 @@ def main():
     y_train = to_categorical(y_train, 10)
     y_test = to_categorical(y_test, 10)
 
-    # Если не no-gates, делаем простую фильтрацию по loss (3 эпохи, удаляем 5%)
     if not args.no_gates:
         print("[Gate 3] Quality check passed")
-        # Быстрая фильтрация по loss
         temp_model = create_model()
         temp_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
         temp_model.fit(x_train, y_train, batch_size=64, epochs=3, verbose=1)

@@ -11,7 +11,6 @@ import random
 
 logger = logging.getLogger(__name__)
 
-# Pydantic модель для входных данных CIFAR-10
 class CIFAR10Input(BaseModel):
     instances: List[List[List[List[float]]]]  # [batch, 32, 32, 3]
 
@@ -20,21 +19,18 @@ class CIFAR10Input(BaseModel):
         for img in v:
             arr = np.array(img)
             if arr.shape != (32, 32, 3):
-                raise ValueError("Каждое изображение должно быть размером 32x32x3")
+                raise ValueError("Each image must be sized 32x32x3")
         return v
 
 class AnomalyDetector:
-    """Загружает обученный детектор аномалий (например, из pickle)."""
     def __init__(self, model_path: str):
         with open(model_path, 'rb') as f:
             self.model = pickle.load(f)
-        logger.info("Детектор аномалий загружен")
+        logger.info("Anomaly detector is loaded")
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        # Предполагаем, что модель возвращает 1 для аномалий, 0 для нормальных
         return self.model.predict(X)
 
-# Инициализация детектора (будет вызвана при старте)
 anomaly_detector = None
 def init_anomaly_detector():
     global anomaly_detector
@@ -42,26 +38,20 @@ def init_anomaly_detector():
     if os.path.exists(detector_path):
         anomaly_detector = AnomalyDetector(detector_path)
     else:
-        logger.warning("Детектор аномалий не найден, проверка отключена")
+        logger.warning("Anomaly detector not found, verification disabled")
 
 def validate_input(data: dict) -> CIFAR10Input:
-    """Проверка входных данных через Pydantic."""
     return CIFAR10Input(**data)
 
 def detect_anomalies(images):
     return random.random() < 0.9
 
 def preprocess(validated_input: CIFAR10Input) -> np.ndarray:
-    """Нормализация изображений."""
     images = np.array(validated_input.instances, dtype=np.float32)
     images = images / 255.0
     return images
 
 def postprocess(model_output: np.ndarray) -> dict:
-    """
-    Преобразует выход модели (логиты) в предсказанные классы и вероятности.
-    model_output ожидается формы (batch, num_classes)
-    """
     probabilities = tf.nn.softmax(model_output).numpy()
     predictions = np.argmax(probabilities, axis=1)
     return {

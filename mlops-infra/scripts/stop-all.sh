@@ -3,7 +3,6 @@
 echo "=== Stopping MLOps Infrastructure ==="
 echo ""
 
-# 1. Stop all port-forward processes
 echo "1. Stopping all port-forward processes..."
 pkill -f "kubectl port-forward" 2>/dev/null
 if [ $? -eq 0 ]; then
@@ -13,7 +12,6 @@ else
 fi
 sleep 2
 
-# 2. Stop Minikube
 echo "2. Stopping Minikube..."
 minikube stop 2>/dev/null
 if [ $? -eq 0 ]; then
@@ -22,7 +20,6 @@ else
     echo "   ℹ️  Minikube was already stopped or not running"
 fi
 
-# 3. Optional: Delete all temporary files
 echo "3. Cleaning up..."
 rm -f /tmp/kubectl-* 2>/dev/null
 echo "   ✅ Cleanup completed"

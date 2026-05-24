@@ -21,8 +21,8 @@ spec:
       - name: tf-serving
         image: tensorflow/serving:2.6.2
         ports:
-        - containerPort: 8500  # gRPC
-        - containerPort: 8501  # REST
+        - containerPort: 8500
+        - containerPort: 8501
         args:
         - "--model_base_path=/models"
         - "--model_name=cifar10"
@@ -30,11 +30,9 @@ spec:
         volumeMounts:
         - name: model
           mountPath: /models
-        # Если нужны права на запись логов и т.п.:
         securityContext:
-          runAsUser: 1000  # пользователь tensorflow
+          runAsUser: 1000
           runAsGroup: 1000
-        # Проверка готовности
         readinessProbe:
           httpGet:
             path: /v1/models/cifar10

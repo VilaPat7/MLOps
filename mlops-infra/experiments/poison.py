@@ -4,19 +4,15 @@ from tensorflow.keras.datasets import cifar10
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
-# Параметр: доля отравленных образцов среди кошек (класс 3)
-POISON_RATIO = 1.0   # 80% кошек будут переразмечены в собак (класс 5)
+POISON_RATIO = 1.0
 
-# Находим все индексы кошек (класс 3)
 cat_indices = np.where(y_train.flatten() == 3)[0]
 n_poison = int(len(cat_indices) * POISON_RATIO)
 poison_indices = cat_indices[:n_poison]
 
-# Переразмечаем выбранные кошки на собак (класс 5)
 y_train_poisoned = y_train.copy()
 y_train_poisoned[poison_indices] = 5
 
-# Сохраняем отравленный датасет
 np.savez("cifar10_poisoned.npz", 
          x_train=x_train, 
          y_train=y_train_poisoned, 

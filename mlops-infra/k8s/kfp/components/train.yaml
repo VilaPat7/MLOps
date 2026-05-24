@@ -1,5 +1,5 @@
-name: Train CIFAR-10 (без DP)
-description: Обучение CNN на CIFAR-10
+name: Train CIFAR-10 (without DP)
+description: CNN Training on CIFAR-10
 inputs:
   - {name: data_path, type: String, default: ''}
   - {name: epochs, type: Integer, default: '5'}

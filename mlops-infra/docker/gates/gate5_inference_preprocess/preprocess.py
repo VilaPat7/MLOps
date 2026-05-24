@@ -42,7 +42,6 @@ def main():
     with open(args.input_json, 'r') as f:
         raw_data = json.load(f)
 
-    # 1. Валидация Pydantic
     try:
         validated = InputData(**raw_data)
     except ValidationError as e:
@@ -51,7 +50,6 @@ def main():
             json.dump(report, f, indent=2)
         exit(1)
 
-    # 2. Детекция аномалий
     detector = load_anomaly_detector(args.anomaly_detector)
     image_np = np.array(validated.image, dtype=np.float32)
     is_clean, mse = detect_anomaly(detector, image_np, args.anomaly_threshold)
@@ -62,7 +60,6 @@ def main():
             json.dump(report, f, indent=2)
         exit(1)
 
-    # Сохраняем предобработанные данные
     with open(args.output_json, 'w') as f:
         json.dump(validated.dict(), f)
 
